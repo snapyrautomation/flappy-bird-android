@@ -21,9 +21,11 @@ import android.util.Log
 import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
 import com.snapyr.sdk.Traits
+import com.snapyr.sdk.inapp.InAppConfig
+import com.snapyr.sdk.inapp.InAppMessage
 
 
-class SnapyrComponent (private val context: Context) {
+class SnapyrComponent (private val context: Context, private val flappyBird: FlappyBird) {
 
     var singleton:SnapyrData= SnapyrData.instance;
 
@@ -37,7 +39,18 @@ class SnapyrComponent (private val context: Context) {
         snapyr.enableSnapyrPushHandling()
             .trackApplicationLifecycleEvents() // Enable this to record certain application events automatically
             .recordScreenViews() // Enable this to record screen views automatically
-            .flushQueueSize(1);
+            .flushQueueSize(1)
+                .configureInAppHandling(
+                    InAppConfig()
+                            .setPollingRate(30000)
+                            .setActionCallback { inAppMessage: InAppMessage? ->
+                                if (inAppMessage != null) {
+                                    userInAppCallback(
+                                            inAppMessage
+                                    )
+                                }
+                            })
+        ;
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         if (!prefs.getBoolean("firstTime", false)) {
 
@@ -48,6 +61,24 @@ class SnapyrComponent (private val context: Context) {
             editor.putBoolean("register", false)
             editor.commit()
         }
+    }
+
+    private fun userInAppCallback(message: InAppMessage) {
+        Log.println(
+                Log.INFO,
+                "SnapyrInApp",
+                """inapp cb triggered: 
+	${message.Timestamp}
+	${message.ActionType}
+	        ${message.UserId}
+	${message.ActionToken}
+	${message.Content}
+	""")
+        flappyBird.onInAppMessage(message)
+    }
+
+    internal fun onDoReset() {
+        Snapyr.with(context).reset()
     }
 
     internal fun onDoIdentify() {
