@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kostasdrakonakis.flappybird
+package com.snapyr.flappybird
 
+import android.content.Context
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -26,7 +27,8 @@ import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Rectangle
 import java.util.*
 
-class FlappyBird : ApplicationAdapter() {
+
+class FlappyBird(private val context: Context) : ApplicationAdapter() {
 
     private lateinit var batch: SpriteBatch
     private lateinit var background: Texture
@@ -57,8 +59,11 @@ class FlappyBird : ApplicationAdapter() {
     private val tubeX = FloatArray(numberOfTubes)
     private val tubeOffset = FloatArray(numberOfTubes)
     private var distanceBetweenTubes: Float = 0.toFloat()
+    private val snapyr = SnapyrComponent(context)
 
     override fun create() {
+        snapyr.build()
+        snapyr.onDoIdentify()
         batch = SpriteBatch()
         background = Texture("bg.png")
         gameOver = Texture("gameover.png")
@@ -92,9 +97,9 @@ class FlappyBird : ApplicationAdapter() {
         batch.draw(background, 0f, 0f, gdxWidth.toFloat(), gdxHeight.toFloat())
 
         if (gameState == 1) {
-
             if (tubeX[scoringTube] < gdxWidth / 2) {
                 score++
+                snapyr.yourScore(score)
                 if (scoringTube < numberOfTubes - 1) {
                     scoringTube++
                 } else {
@@ -135,7 +140,7 @@ class FlappyBird : ApplicationAdapter() {
                 velocity += GRAVITY
                 birdY -= velocity
             } else {
-                gameState = 2
+                gameState = 1
             }
 
         } else if (gameState == 0) {
@@ -157,6 +162,7 @@ class FlappyBird : ApplicationAdapter() {
         }
 
         flapState = if (flapState == 0) 1 else 0
+        if(score == 100) gameState = 2
 
         batch.draw(birds[flapState], gdxWidth / 2f - birds[flapState].width / 2f, birdY)
         font.draw(batch, score.toString(), 100f, 200f)
@@ -166,13 +172,16 @@ class FlappyBird : ApplicationAdapter() {
 
         for (i in 0 until numberOfTubes) {
             if (Intersector.overlaps(birdCircle, topTubeRectangles[i])
-                    || Intersector.overlaps(birdCircle, bottomTubeRectangles[i])) gameState = 2
+                    || Intersector.overlaps(birdCircle, bottomTubeRectangles[i])) gameState = 1
         }
 
         batch.end()
     }
 
     private fun startGame() {
+
+        snapyr.onDoTrack()
+
         birdY = gdxHeight / 2f - birds[0].height / 2f
 
         for (i in 0 until numberOfTubes) {
