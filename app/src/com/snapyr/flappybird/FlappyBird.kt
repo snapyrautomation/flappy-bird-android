@@ -15,7 +15,10 @@
  */
 package com.snapyr.flappybird
 
+import android.R
+import android.app.AlertDialog
 import android.content.Context
+import android.util.Log
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -25,8 +28,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Circle
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Rectangle
+import com.snapyr.sdk.inapp.InAppMessage
 import java.util.*
 
+enum class RenderState { RUNNING, PAUSED }
 
 class FlappyBird(private val context: Context) : ApplicationAdapter() {
 
@@ -42,6 +47,8 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     private lateinit var bottomTube: Texture
     private lateinit var random: Random
 
+    private var collisionsEnabled = false
+    private var renderState = RenderState.RUNNING
     private var flapState = 0
     private var birdY: Float = 0f
     private var velocity: Float = 0f
@@ -59,10 +66,47 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     private val tubeX = FloatArray(numberOfTubes)
     private val tubeOffset = FloatArray(numberOfTubes)
     private var distanceBetweenTubes: Float = 0.toFloat()
-    private val snapyr = SnapyrComponent(context)
+    private val snapyr = SnapyrComponent(context, this)
+
+    fun onInAppMessage(message: InAppMessage) {
+        var jsonContent = message.Content.jsonContent
+        if (jsonContent != null) {
+            var hiScore = jsonContent["hiScore"] as Double
+            var alertMsg = jsonContent["message"] as String
+            if (hiScore >= 0) {
+                // We want to pause the game, show an alert saying "we're going to enable
+                // collisions", then resume the game after user accepts. But I couldn't figure out
+                // how to show an alert in front of the game in time, so just enabling collisions
+                collisionsEnabled = true
+
+//                renderState = RenderState.PAUSED
+//                Gdx.graphics.isContinuousRendering = false
+//                Gdx.graphics.requestRendering()
+//                AlertDialog.Builder(context)
+//                        .setTitle("Hi Score: $hiScore")
+//                        .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
+//                        .setPositiveButton("I'll... try I guess...") { _, _ ->
+//                            collisionsEnabled = true
+//                            // resume game
+//                            renderState = RenderState.RUNNING
+//                            Gdx.graphics.isContinuousRendering = true
+//                            Gdx.graphics.requestRendering()
+//                        }
+//                        .setNegativeButton("No way, I admit I suck") { _, _ ->
+//                            // resume game
+//                            renderState = RenderState.RUNNING
+//                            Gdx.graphics.isContinuousRendering = true
+//                            Gdx.graphics.requestRendering()
+//                        }
+//                        .show()
+            }
+
+        }
+    }
 
     override fun create() {
         snapyr.build()
+        snapyr.onDoReset()
         snapyr.onDoIdentify()
         batch = SpriteBatch()
         background = Texture("bg.png")
@@ -93,6 +137,10 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     }
 
     override fun render() {
+        if (renderState == RenderState.PAUSED) {
+            return
+        }
+
         batch.begin()
         batch.draw(background, 0f, 0f, gdxWidth.toFloat(), gdxHeight.toFloat())
 
@@ -136,11 +184,16 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
                         bottomTubeHeight.toFloat())
             }
 
-            if (birdY > 0) {
+            if (birdY >= 0) {
                 velocity += GRAVITY
                 birdY -= velocity
             } else {
-                gameState = 1
+                if (collisionsEnabled) {
+                    gameState = 2
+                } else {
+                    birdY = 0F
+                    velocity = 0F
+                }
             }
 
         } else if (gameState == 0) {
@@ -153,6 +206,7 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
                     gdxHeight / 2f - gameOver.height / 2f)
 
             if (Gdx.input.justTouched()) {
+                collisionsEnabled = false
                 gameState = 1
                 startGame()
                 score = 0
@@ -172,14 +226,15 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
 
         for (i in 0 until numberOfTubes) {
             if (Intersector.overlaps(birdCircle, topTubeRectangles[i])
-                    || Intersector.overlaps(birdCircle, bottomTubeRectangles[i])) gameState = 1
+                    || Intersector.overlaps(birdCircle, bottomTubeRectangles[i])) {
+                gameState = if (collisionsEnabled) 2 else 1
+            }
         }
 
         batch.end()
     }
 
     private fun startGame() {
-
         snapyr.onDoTrack()
 
         birdY = gdxHeight / 2f - birds[0].height / 2f
