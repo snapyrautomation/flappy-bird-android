@@ -66,7 +66,7 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     private val tubeX = FloatArray(numberOfTubes)
     private val tubeOffset = FloatArray(numberOfTubes)
     private var distanceBetweenTubes: Float = 0.toFloat()
-    private val snapyr = SnapyrComponent(context, this)
+    private val snapyr = SnapyrComponent.instance
 
     fun onInAppMessage(message: InAppMessage) {
         var jsonContent = message.Content.jsonContent
@@ -105,9 +105,6 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     }
 
     override fun create() {
-        snapyr.build()
-        snapyr.onDoReset()
-        snapyr.onDoIdentify()
         batch = SpriteBatch()
         background = Texture("bg.png")
         gameOver = Texture("gameover.png")
