@@ -26,6 +26,7 @@ import kotlinx.android.synthetic.main.activity_splash.*
 
 class SplashActivity : Activity() {
     private var snapyrInitialized = false
+    var snapyrData: SnapyrData = SnapyrData.instance
 
     private lateinit var identifyUserId: EditText
     private lateinit var identifyKey: EditText
@@ -38,12 +39,12 @@ class SplashActivity : Activity() {
             Toast.makeText(this, "Snapyr already initialized; restart app to initialize again", Toast.LENGTH_LONG).show()
             return
         }
-        var snapyrData: SnapyrData = SnapyrData.instance
-        snapyrData.identifyUserId=identifyUserId.text.toString()
-        snapyrData.identifyEmail=identifyEmail.text.toString()
-        snapyrData.identifyKey=identifyKey.text.toString()
-        snapyrData.identifyName=identifyName.text.toString()
-        snapyrData.identifyPhone=identifyPhone.text.toString()
+
+        snapyrData.identifyUserId = identifyUserId.text.toString()
+        snapyrData.identifyEmail = identifyEmail.text.toString()
+        snapyrData.identifyKey = identifyKey.text.toString()
+        snapyrData.identifyName = identifyName.text.toString()
+        snapyrData.identifyPhone = identifyPhone.text.toString()
 
         var snapyr = SnapyrComponent.build(this.applicationContext)
         snapyr.onDoReset()
@@ -64,17 +65,22 @@ class SplashActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
-        identifyUserId = findViewById<EditText>(R.id.identify_userid);
-        //        identifyUserId.setText("alina3")
-        identifyKey = findViewById<EditText>(R.id.identify_key);
-        identifyKey.setText("HheJr6JJGowjvMvJGq9FqunE0h8EKAIG")
-        identifyEmail = findViewById<EditText>(R.id.identify_email);
-        //        identifyEmail.setText("alina@snapyr.com")
-        identifyName = findViewById<EditText>(R.id.identify_name);
-        //        identifyName.setText("alina3")
-        identifyPhone = findViewById<EditText>(R.id.identify_phone);
 
-        var snapyrData: SnapyrData = SnapyrData.instance;
+        identifyUserId = findViewById<EditText>(R.id.identify_userid);
+        identifyUserId.setText(snapyrData.identifyUserId)
+
+        identifyKey = findViewById<EditText>(R.id.identify_key);
+        identifyKey.setText(snapyrData.identifyKey)
+
+        identifyEmail = findViewById<EditText>(R.id.identify_email);
+        identifyEmail.setText(snapyrData.identifyEmail)
+
+        identifyName = findViewById<EditText>(R.id.identify_name);
+        identifyName.setText(snapyrData.identifyName)
+
+        identifyPhone = findViewById<EditText>(R.id.identify_phone);
+        identifyPhone.setText(snapyrData.identifyPhone);
+
         env.text = "Env: " + snapyrData.env
 
         initSnapyrButton.setOnClickListener {

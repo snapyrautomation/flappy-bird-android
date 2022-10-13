@@ -66,7 +66,7 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     private val tubeX = FloatArray(numberOfTubes)
     private val tubeOffset = FloatArray(numberOfTubes)
     private var distanceBetweenTubes: Float = 0.toFloat()
-    private val snapyr = SnapyrComponent.instance
+    private var snapyr = try { SnapyrComponent.instance } catch (e: Exception) { SnapyrComponent.build(context) }
 
     fun onInAppMessage(message: InAppMessage) {
         var jsonContent = message.Content.jsonContent

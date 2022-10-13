@@ -28,6 +28,7 @@ import com.snapyr.sdk.inapp.InAppMessage
 class SnapyrComponent private constructor(private val context: Context) {
 
     var snapyrData: SnapyrData = SnapyrData.instance;
+    var preferences = context.applicationContext.getSharedPreferences("snapyrConfig", Context.MODE_PRIVATE)
 
     companion object {
         private var ourInstance: SnapyrComponent? = null
