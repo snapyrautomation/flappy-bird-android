@@ -33,7 +33,7 @@ import java.util.*
 
 enum class RenderState { RUNNING, PAUSED }
 
-class FlappyBird(private val context: Context) : ApplicationAdapter() {
+class FlappyBird(private val context: Context, private var collisionsEnabled: Boolean = false, private var score: Int = 0) : ApplicationAdapter() {
 
     private lateinit var batch: SpriteBatch
     private lateinit var background: Texture
@@ -47,12 +47,10 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     private lateinit var bottomTube: Texture
     private lateinit var random: Random
 
-    private var collisionsEnabled = false
     private var renderState = RenderState.RUNNING
     private var flapState = 0
     private var birdY: Float = 0f
     private var velocity: Float = 0f
-    private var score: Int = 0
     private var scoringTube: Int = 0
     private var gameState: Int = 0
     private val numberOfTubes: Int = 4

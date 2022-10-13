@@ -18,13 +18,21 @@ package com.snapyr.flappybird
 import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
-import android.widget.Button
+import android.util.Base64
+import android.util.Log
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import com.github.kostasdrakonakis.androidnavigator.IntentNavigator
+import com.snapyr.sdk.Snapyr
+import com.snapyr.sdk.inapp.InAppActionType
+import com.snapyr.sdk.inapp.InAppCallback
+import com.snapyr.sdk.inapp.InAppContentType
+import com.snapyr.sdk.inapp.InAppMessage
 import kotlinx.android.synthetic.main.activity_splash.*
+import java.lang.Exception
 
-class SplashActivity : Activity() {
+class SplashActivity : Activity(), InAppCallback {
     private var snapyrInitialized = false
     var snapyrData: SnapyrData = SnapyrData.instance
 
@@ -49,6 +57,8 @@ class SplashActivity : Activity() {
         var snapyr = SnapyrComponent.build(this.applicationContext)
         snapyr.onDoReset()
         snapyr.onDoIdentify()
+
+        snapyr.registerInAppListener("splash", this)
 
         snapyrInitialized = true
 
@@ -115,5 +125,53 @@ class SplashActivity : Activity() {
             }
             builder.show()
         }
+
+        playerStinksButton.setOnClickListener {
+            onPlayerStinksClick(it)
+        }
+
+        reachedVipButton.setOnClickListener {
+            onReachedVipClick(it)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            var snapyr = SnapyrComponent.instance
+            snapyr.deregisterInAppListener("splash")
+        } finally {
+
+        }
+    }
+
+    fun onPlayerStinksClick(v: View) {
+        try {
+            Snapyr.with(this).track("userStinks")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error running track - did you forget to initialize Snapyr?", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun onReachedVipClick(v: View) {
+        try {
+            Snapyr.with(this).track("userRules")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error running track - did you forget to initialize Snapyr?", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onAction(message: InAppMessage?) {
+        if (message == null || message.ActionType != InAppActionType.ACTION_TYPE_CUSTOM) {
+            return
+        }
+        if (message.Content.type == InAppContentType.CONTENT_TYPE_HTML) {
+            runOnUiThread {
+                // Neither Brandon nor I know why this needs to be base64 but w/e
+                val encodedHtml = Base64.encodeToString(message.Content.htmlContent.toByteArray(), Base64.NO_PADDING)
+                topBanner.loadData(encodedHtml, "text/html", "base64")
+            }
+        }
+        Log.e("Snapyr", message.asValueMap().toJsonObject().toString())
     }
 }

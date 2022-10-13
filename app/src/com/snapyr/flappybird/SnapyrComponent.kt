@@ -21,6 +21,7 @@ import android.util.Log
 import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
 import com.snapyr.sdk.Traits
+import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppConfig
 import com.snapyr.sdk.inapp.InAppMessage
 
@@ -29,6 +30,7 @@ class SnapyrComponent private constructor(private val context: Context) {
 
     var snapyrData: SnapyrData = SnapyrData.instance;
     var preferences = context.applicationContext.getSharedPreferences("snapyrConfig", Context.MODE_PRIVATE)
+    var inappListeners = mutableMapOf<String, InAppCallback>()
 
     companion object {
         private var ourInstance: SnapyrComponent? = null
@@ -60,7 +62,7 @@ class SnapyrComponent private constructor(private val context: Context) {
                         .flushQueueSize(1)
                         .configureInAppHandling(
                                 InAppConfig()
-                                        .setPollingRate(30000)
+                                        .setPollingRate(3000000)
                                         .setActionCallback { inAppMessage: InAppMessage? ->
                                             if (inAppMessage != null) {
                                                 ourInstance!!.userInAppCallback(
@@ -95,7 +97,18 @@ class SnapyrComponent private constructor(private val context: Context) {
 	${message.ActionToken}
 	${message.Content}
 	""")
+        inappListeners.forEach { entry ->
+            entry.value.onAction(message)
+        }
 //        flappyBird.onInAppMessage(message)
+    }
+
+    fun registerInAppListener(key: String, listener: InAppCallback) {
+        inappListeners.set(key, listener)
+    }
+
+    fun deregisterInAppListener(key: String) {
+        inappListeners.remove(key);
     }
 
     internal fun onDoReset() {
