@@ -27,7 +27,7 @@ import com.github.kostasdrakonakis.annotation.Intent
 
 @Intent
 class MainActivity : AndroidApplication() {
-    var collisionsEnabled = false
+    var collisionsEnabled = true
     var startingScore = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +64,13 @@ class MainActivity : AndroidApplication() {
                 AlertDialog.Builder(context)
                         .setTitle("Watch Out!")
                         .setMessage("We're giving you 1,000 points as a reward!\n\nBut collisions are enabled now, so it'll be a lot harder!")
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton("Got it!", null)
+                        .show()
+            } else {
+                AlertDialog.Builder(context)
+                        .setTitle("Have a Hand!")
+                        .setMessage("Looks like you could use some help, so we made this round a little easier!")
                         // The dialog is automatically dismissed when a dialog button is clicked.
                         .setPositiveButton("Got it!", null)
                         .show()

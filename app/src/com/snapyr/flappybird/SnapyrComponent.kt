@@ -62,7 +62,7 @@ class SnapyrComponent private constructor(private val context: Context) {
                         .flushQueueSize(1)
                         .configureInAppHandling(
                                 InAppConfig()
-                                        .setPollingRate(3000000)
+                                        .setPollingRate(30000)
                                         .setActionCallback { inAppMessage: InAppMessage? ->
                                             if (inAppMessage != null) {
                                                 ourInstance!!.userInAppCallback(

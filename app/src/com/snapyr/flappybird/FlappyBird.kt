@@ -35,6 +35,8 @@ enum class RenderState { RUNNING, PAUSED }
 
 class FlappyBird(private val context: Context, private var collisionsEnabled: Boolean = false, private var score: Int = 0) : ApplicationAdapter() {
 
+    private var initialCollisionsEnabled = collisionsEnabled
+
     private lateinit var batch: SpriteBatch
     private lateinit var background: Texture
     private lateinit var gameOver: Texture
@@ -201,7 +203,7 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
                     gdxHeight / 2f - gameOver.height / 2f)
 
             if (Gdx.input.justTouched()) {
-                collisionsEnabled = false
+                collisionsEnabled = initialCollisionsEnabled
                 gameState = 1
                 startGame()
                 score = 0
