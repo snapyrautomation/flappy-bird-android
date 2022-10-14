@@ -27,14 +27,18 @@ import com.github.kostasdrakonakis.annotation.Intent
 
 @Intent
 class MainActivity : AndroidApplication() {
+    var collisionsEnabled = true
+    var startingScore = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initialize(FlappyBird(context), AndroidApplicationConfiguration())
 
         if(intent != null) {
             val currentIntent: Uri? = intent.data;
             handleOpenIntent(currentIntent)
         }
+
+        initialize(FlappyBird(context, collisionsEnabled, startingScore), AndroidApplicationConfiguration())
     }
 
     private fun handleOpenIntent(data: Uri?) {
@@ -43,7 +47,7 @@ class MainActivity : AndroidApplication() {
         }
         val isCorrect = data.getQueryParameter("correct")
         Log.d("isCorrect", isCorrect.toString())
-        if (isCorrect != "") {
+        if (isCorrect != null && isCorrect != "") {
             if(isCorrect == "true")
                 correct()
             else if (isCorrect == "false"){
@@ -51,6 +55,31 @@ class MainActivity : AndroidApplication() {
             } else {
                 issue()
             }
+        }
+
+        val collisionsEnabled = data.getQueryParameter("collisionsEnabled")
+        if (collisionsEnabled != null && collisionsEnabled != "") {
+            this.collisionsEnabled = collisionsEnabled.toBoolean()
+            if (this.collisionsEnabled) {
+                AlertDialog.Builder(context)
+                        .setTitle("Watch Out!")
+                        .setMessage("We're giving you 1,000 points as a reward!\n\nBut collisions are enabled now, so it'll be a lot harder!")
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton("Got it!", null)
+                        .show()
+            } else {
+                AlertDialog.Builder(context)
+                        .setTitle("Have a Hand!")
+                        .setMessage("Looks like you could use some help, so we made this round a little easier!")
+                        // The dialog is automatically dismissed when a dialog button is clicked.
+                        .setPositiveButton("Got it!", null)
+                        .show()
+            }
+        }
+
+        val startingScore = data.getQueryParameter("startingScore")
+        if (startingScore != null && startingScore != "") {
+            this.startingScore = startingScore.toInt()
         }
     }
 

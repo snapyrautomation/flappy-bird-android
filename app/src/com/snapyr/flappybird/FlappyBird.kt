@@ -33,7 +33,9 @@ import java.util.*
 
 enum class RenderState { RUNNING, PAUSED }
 
-class FlappyBird(private val context: Context) : ApplicationAdapter() {
+class FlappyBird(private val context: Context, private var collisionsEnabled: Boolean = false, private var score: Int = 0) : ApplicationAdapter() {
+
+    private var initialCollisionsEnabled = collisionsEnabled
 
     private lateinit var batch: SpriteBatch
     private lateinit var background: Texture
@@ -47,12 +49,10 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     private lateinit var bottomTube: Texture
     private lateinit var random: Random
 
-    private var collisionsEnabled = false
     private var renderState = RenderState.RUNNING
     private var flapState = 0
     private var birdY: Float = 0f
     private var velocity: Float = 0f
-    private var score: Int = 0
     private var scoringTube: Int = 0
     private var gameState: Int = 0
     private val numberOfTubes: Int = 4
@@ -66,7 +66,7 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     private val tubeX = FloatArray(numberOfTubes)
     private val tubeOffset = FloatArray(numberOfTubes)
     private var distanceBetweenTubes: Float = 0.toFloat()
-    private val snapyr = SnapyrComponent(context, this)
+    private var snapyr = try { SnapyrComponent.instance } catch (e: Exception) { SnapyrComponent.build(context) }
 
     fun onInAppMessage(message: InAppMessage) {
         var jsonContent = message.Content.jsonContent
@@ -105,9 +105,6 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
     }
 
     override fun create() {
-        snapyr.build()
-        snapyr.onDoReset()
-        snapyr.onDoIdentify()
         batch = SpriteBatch()
         background = Texture("bg.png")
         gameOver = Texture("gameover.png")
@@ -206,7 +203,7 @@ class FlappyBird(private val context: Context) : ApplicationAdapter() {
                     gdxHeight / 2f - gameOver.height / 2f)
 
             if (Gdx.input.justTouched()) {
-                collisionsEnabled = false
+                collisionsEnabled = initialCollisionsEnabled
                 gameState = 1
                 startGame()
                 score = 0

@@ -1,6 +1,7 @@
 package com.snapyr.flappybird
 
 import android.app.Application
+import android.content.Context
 import android.preference.PreferenceManager
 
 class MyApp: Application() {
@@ -10,5 +11,11 @@ class MyApp: Application() {
         val editor = prefs1.edit()
         editor.clear()
         editor.commit()
+
+        MyApp.appContext = applicationContext
+    }
+
+    companion object {
+        lateinit var appContext: Context
     }
 }

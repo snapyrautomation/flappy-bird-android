@@ -21,45 +21,68 @@ import android.util.Log
 import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
 import com.snapyr.sdk.Traits
+import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppConfig
 import com.snapyr.sdk.inapp.InAppMessage
 
 
-class SnapyrComponent (private val context: Context, private val flappyBird: FlappyBird) {
+class SnapyrComponent private constructor(private val context: Context) {
 
-    var singleton:SnapyrData= SnapyrData.instance;
+    var snapyrData: SnapyrData = SnapyrData.instance;
+    var preferences = context.applicationContext.getSharedPreferences("snapyrConfig", Context.MODE_PRIVATE)
+    var inappListeners = mutableMapOf<String, InAppCallback>()
 
-    internal fun build() {
-        var snapyr = Snapyr.Builder(context, SnapyrData.instance.identifyKey)
-        Log.d("singleton.env", singleton.env);
-                if(singleton.env == "dev")
+    companion object {
+        private var ourInstance: SnapyrComponent? = null
+
+        val instance: SnapyrComponent
+            get() {
+                synchronized(SnapyrComponent) {
+                    if (ourInstance == null) {
+                        throw Exception("Run `build()` before accessing instance")
+                    }
+                    return ourInstance!!
+                }
+            }
+
+        internal fun build(context: Context): SnapyrComponent {
+            synchronized(SnapyrComponent) {
+                if (ourInstance == null) {
+                    ourInstance = SnapyrComponent(context)
+                }
+                var snapyr = Snapyr.Builder(context, SnapyrData.instance.identifyKey)
+                Log.d("singleton.env", ourInstance!!.snapyrData.env);
+                if (ourInstance!!.snapyrData.env == "dev")
                     snapyr.enableDevEnvironment()
-        if(singleton.env == "stg")
-            snapyr.enableStageEnvironment()
-        snapyr.enableSnapyrPushHandling()
-            .trackApplicationLifecycleEvents() // Enable this to record certain application events automatically
-            .recordScreenViews() // Enable this to record screen views automatically
-            .flushQueueSize(1)
-                .configureInAppHandling(
-                    InAppConfig()
-                            .setPollingRate(30000)
-                            .setActionCallback { inAppMessage: InAppMessage? ->
-                                if (inAppMessage != null) {
-                                    userInAppCallback(
-                                            inAppMessage
-                                    )
-                                }
-                            })
-        ;
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        if (!prefs.getBoolean("firstTime", false)) {
+                if (ourInstance!!.snapyrData.env == "stg")
+                    snapyr.enableStageEnvironment()
+                snapyr.enableSnapyrPushHandling()
+                        .trackApplicationLifecycleEvents() // Enable this to record certain application events automatically
+                        .recordScreenViews() // Enable this to record screen views automatically
+                        .flushQueueSize(1)
+                        .configureInAppHandling(
+                                InAppConfig()
+                                        .setPollingRate(30000)
+                                        .setActionCallback { inAppMessage: InAppMessage? ->
+                                            if (inAppMessage != null) {
+                                                ourInstance!!.userInAppCallback(
+                                                        inAppMessage
+                                                )
+                                            }
+                                        })
+                ;
+                val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+                if (!prefs.getBoolean("firstTime", false)) {
 
-            if(!Snapyr.Valid())
-                Snapyr.setSingletonInstance(snapyr.build());
-            val editor = prefs.edit()
-            editor.putBoolean("firstTime", true)
-            editor.putBoolean("register", false)
-            editor.commit()
+                    if (!Snapyr.Valid())
+                        Snapyr.setSingletonInstance(snapyr.build());
+                    val editor = prefs.edit()
+                    editor.putBoolean("firstTime", true)
+                    editor.putBoolean("register", false)
+                    editor.commit()
+                }
+                return ourInstance!!
+            }
         }
     }
 
@@ -74,7 +97,18 @@ class SnapyrComponent (private val context: Context, private val flappyBird: Fla
 	${message.ActionToken}
 	${message.Content}
 	""")
-        flappyBird.onInAppMessage(message)
+        inappListeners.forEach { entry ->
+            entry.value.onAction(message)
+        }
+//        flappyBird.onInAppMessage(message)
+    }
+
+    fun registerInAppListener(key: String, listener: InAppCallback) {
+        inappListeners.set(key, listener)
+    }
+
+    fun deregisterInAppListener(key: String) {
+        inappListeners.remove(key);
     }
 
     internal fun onDoReset() {
@@ -82,21 +116,20 @@ class SnapyrComponent (private val context: Context, private val flappyBird: Fla
     }
 
     internal fun onDoIdentify() {
-        Snapyr.with(context).identify(singleton.identifyUserId)
-        Snapyr.with(context).identify(Traits().putName(singleton.identifyName))
-        Snapyr.with(context).identify(Traits().putEmail(singleton.identifyEmail))
-        Snapyr.with(context).identify(Traits().putPhone(singleton.identifyPhone))
+        Snapyr.with(context).identify(snapyrData.identifyUserId)
+        Snapyr.with(context).identify(Traits().putName(snapyrData.identifyName))
+        Snapyr.with(context).identify(Traits().putEmail(snapyrData.identifyEmail))
+        Snapyr.with(context).identify(Traits().putPhone(snapyrData.identifyPhone))
         Snapyr.with(context)
-            .identify(singleton.identifyUserId, Traits().putValue("games_played", 0), null)
+                .identify(snapyrData.identifyUserId, Traits().putValue("games_played", 0), null)
     }
-
 
 
     internal fun onDoTrack() {
         Log.d("onDoTrack", "Track tapped")
         val prefs1 = PreferenceManager.getDefaultSharedPreferences(context)
         if (!prefs1.getBoolean("register", false)) {
-        Snapyr.with(context).track("register1")
+            Snapyr.with(context).track("register1")
             val editor = prefs1.edit()
             editor.putBoolean("register", true)
             editor.commit()
@@ -105,7 +138,7 @@ class SnapyrComponent (private val context: Context, private val flappyBird: Fla
 
     internal fun yourScore(scoreNumber: Int) {
         Log.d("onDoTrack", "Track tapped")
-        Snapyr.with(context).track("score",  Properties().putValue("total", scoreNumber));
+        Snapyr.with(context).track("score", Properties().putValue("total", scoreNumber));
     }
 
     internal fun onDoFlush() {

@@ -34,6 +34,7 @@
                 <data
                     android:host="skookle.com"
                     android:scheme="snappybirds" />
+                <data android:scheme="snappybirds" android:host="demo" />
             </intent-filter>
         </activity>
         <!-- Used by Snapyr to automatically track notification receipt/interaction -->
