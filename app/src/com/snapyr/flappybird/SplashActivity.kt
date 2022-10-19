@@ -15,26 +15,37 @@
  */
 package com.snapyr.flappybird
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.Toast
 import com.github.kostasdrakonakis.androidnavigator.IntentNavigator
+import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
 import com.snapyr.sdk.inapp.InAppActionType
 import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppContentType
 import com.snapyr.sdk.inapp.InAppMessage
 import kotlinx.android.synthetic.main.activity_splash.*
-import java.lang.Exception
+
 
 class SplashActivity : Activity(), InAppCallback {
     private var snapyrInitialized = false
     var snapyrData: SnapyrData = SnapyrData.instance
+
+    var currentInAppMessage: InAppMessage? = null
+    var currentMessageInteracted: Boolean = false
 
     private lateinit var identifyUserId: EditText
     private lateinit var identifyKey: EditText
@@ -133,6 +144,44 @@ class SplashActivity : Activity(), InAppCallback {
         reachedVipButton.setOnClickListener {
             onReachedVipClick(it)
         }
+
+        setupWebView()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupWebView() {
+        val client = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = request.getUrl().toString()
+                if (currentInAppMessage != null) {
+                    Snapyr.with(this@SplashActivity).trackInAppMessageClick(currentInAppMessage!!.ActionToken, Properties().putValue("url", url))
+                }
+
+                // Overriding `shouldOverrideUrlLoading` lets us intercept the URL when clicked, but breaks deep links.
+                // Following code makes them work again
+                // https://stackoverflow.com/a/53059413
+                return if (url == null || url.startsWith("http://") || url.startsWith("https://")) false else try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    view.context.startActivity(intent)
+                    true
+                } catch (e: java.lang.Exception) {
+                    Log.e("SnapyrFlappy", "shouldOverrideUrlLoading Exception: $e")
+                    true
+                }
+
+            }
+        }
+        topBanner.webViewClient = client
+        topBanner.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                // Any tap on the webview (even if it didn't trigger a link)
+                currentMessageInteracted = true
+                if (currentInAppMessage != null) {
+                    Snapyr.with(this@SplashActivity).trackInAppMessageClick(currentInAppMessage!!.ActionToken)
+                }
+            }
+            false
+        }
     }
 
     override fun onDestroy() {
@@ -140,6 +189,11 @@ class SplashActivity : Activity(), InAppCallback {
         try {
             var snapyr = SnapyrComponent.instance
             snapyr.deregisterInAppListener("splash")
+            // We don't give the user a direct way to dismiss custom HTML message in this app, but treat as dismiss if they close this
+            // screen without interacting with the webview
+            if (currentInAppMessage != null && !currentMessageInteracted) {
+                Snapyr.with(this).trackInAppMessageDismiss(currentInAppMessage!!.ActionToken)
+            }
         } finally {
 
         }
@@ -166,12 +220,16 @@ class SplashActivity : Activity(), InAppCallback {
             return
         }
         if (message.Content.type == InAppContentType.CONTENT_TYPE_HTML) {
+            // keep track of it so we can read back properties like actionToken later
+            currentInAppMessage = message
+            currentMessageInteracted = false
             runOnUiThread {
                 // Neither Brandon nor I know why this needs to be base64 but w/e
                 val encodedHtml = Base64.encodeToString(message.Content.htmlContent.toByteArray(), Base64.NO_PADDING)
                 topBanner.loadData(encodedHtml, "text/html", "base64")
+                Snapyr.with(this).trackInAppMessageImpression(message.ActionToken);
             }
         }
-        Log.e("Snapyr", message.asValueMap().toJsonObject().toString())
+        Log.e("Snapyr", message.asValueMap().toJsonObject().toString());
     }
 }
