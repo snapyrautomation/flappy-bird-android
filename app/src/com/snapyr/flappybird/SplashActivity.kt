@@ -35,7 +35,7 @@ import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
 import com.snapyr.sdk.inapp.InAppActionType
 import com.snapyr.sdk.inapp.InAppCallback
-import com.snapyr.sdk.inapp.InAppContentType
+import com.snapyr.sdk.inapp.InAppPayloadType
 import com.snapyr.sdk.inapp.InAppMessage
 import kotlinx.android.synthetic.main.activity_splash.*
 
@@ -219,13 +219,13 @@ class SplashActivity : Activity(), InAppCallback {
         if (message == null || message.ActionType != InAppActionType.ACTION_TYPE_CUSTOM) {
             return
         }
-        if (message.Content.type == InAppContentType.CONTENT_TYPE_HTML) {
+        if (message.Content.type == InAppPayloadType.PAYLOAD_TYPE_HTML) {
             // keep track of it so we can read back properties like actionToken later
             currentInAppMessage = message
             currentMessageInteracted = false
             runOnUiThread {
                 // Neither Brandon nor I know why this needs to be base64 but w/e
-                val encodedHtml = Base64.encodeToString(message.Content.htmlContent.toByteArray(), Base64.NO_PADDING)
+                val encodedHtml = Base64.encodeToString(message.Content.htmlPayload.toByteArray(), Base64.NO_PADDING)
                 topBanner.loadData(encodedHtml, "text/html", "base64")
                 Snapyr.with(this).trackInAppMessageImpression(message.ActionToken);
             }

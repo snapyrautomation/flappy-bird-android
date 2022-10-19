@@ -69,7 +69,7 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
     private var snapyr = try { SnapyrComponent.instance } catch (e: Exception) { SnapyrComponent.build(context) }
 
     fun onInAppMessage(message: InAppMessage) {
-        var jsonContent = message.Content.jsonContent
+        var jsonContent = message.Content.jsonPayload
         if (jsonContent != null) {
             var hiScore = jsonContent["hiScore"] as Double
             var alertMsg = jsonContent["message"] as String
