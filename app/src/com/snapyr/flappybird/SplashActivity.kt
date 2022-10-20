@@ -184,19 +184,37 @@ class SplashActivity : Activity(), InAppCallback {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    private fun dismissInAppWebview() {
         try {
             var snapyr = SnapyrComponent.instance
-            snapyr.deregisterInAppListener("splash")
+            // Intention for deregistering here was to prevent in-app callbacks from running in this Activity after
+            // user has switched to another Activity (the game). That doesn't seem to be necessary, as the OS suspends
+            // this activity and the callback doesn't run. If the user goes back to this activity, the callbacks start
+            // working again.
+//            snapyr.deregisterInAppListener("splash")
             // We don't give the user a direct way to dismiss custom HTML message in this app, but treat as dismiss if they close this
             // screen without interacting with the webview
             if (currentInAppMessage != null && !currentMessageInteracted) {
                 Snapyr.with(this).trackInAppMessageDismiss(currentInAppMessage!!.ActionToken)
             }
+        } catch (e: Exception) {
+            Log.e("SnapyrFlappy", "Caught error:", e)
         } finally {
-
+            currentInAppMessage = null
+            currentMessageInteracted = false
+            // effectively unloads/clears the webview
+            topBanner.loadUrl("about:blank")
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        dismissInAppWebview()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        dismissInAppWebview()
     }
 
     fun onPlayerStinksClick(v: View) {
