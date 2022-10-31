@@ -46,8 +46,8 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
     private lateinit var background: Texture
     private lateinit var gameOver: Texture
     private lateinit var birds: Array<Texture>
-    private lateinit var topTubeRectangles: Array<Rectangle?>
-    private lateinit var bottomTubeRectangles: Array<Rectangle?>
+    private lateinit var topTubeRectangles: Array<SnapyrRectangle?>
+    private lateinit var bottomTubeRectangles: Array<SnapyrRectangle?>
     private lateinit var birdCircle: Circle
     private lateinit var font: BitmapFont
     private lateinit var topTube: Texture
@@ -89,7 +89,7 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
                     .setTitle("Hi Score: $hiScore")
                     .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
                     .setPositiveButton("I'll... try I guess...") { _, _ ->
-                collisionsEnabled = true
+                        collisionsEnabled = true
                         // resume game
                         renderState = RenderState.RUNNING
                         Gdx.graphics.isContinuousRendering = true
@@ -179,15 +179,17 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
                         tubeX[i],
                         gdxHeight / 2f - GAP / 2 - bottomTubeHeight.toFloat() + tubeOffset[i])
 
-                topTubeRectangles[i] = Rectangle(tubeX[i],
+                topTubeRectangles[i] = SnapyrRectangle(tubeX[i],
                         gdxHeight / 2f + GAP / 2 + tubeOffset[i],
                         topTubeWidth.toFloat(),
-                        topTubeHeight.toFloat())
+                        topTubeHeight.toFloat(),
+                        collisionsEnabled)
 
-                bottomTubeRectangles[i] = Rectangle(tubeX[i],
+                bottomTubeRectangles[i] = SnapyrRectangle(tubeX[i],
                         gdxHeight / 2f - GAP / 2 - bottomTubeHeight.toFloat() + tubeOffset[i],
                         bottomTubeWidth.toFloat(),
-                        bottomTubeHeight.toFloat())
+                        bottomTubeHeight.toFloat(),
+                        collisionsEnabled)
             }
 
             if (birdY >= 0) {
@@ -231,9 +233,10 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
                 birds[flapState].width / 2f)
 
         for (i in 0 until numberOfTubes) {
-            if (Intersector.overlaps(birdCircle, topTubeRectangles[i])
-                    || Intersector.overlaps(birdCircle, bottomTubeRectangles[i])) {
-                gameState = if (collisionsEnabled) 2 else 1
+            if (Intersector.overlaps(birdCircle, topTubeRectangles[i]) && topTubeRectangles[i]?.collisionsEnabled == true) {
+                gameState = 2
+            } else if (Intersector.overlaps(birdCircle, topTubeRectangles[i]) && topTubeRectangles[i]?.collisionsEnabled == true) {
+                gameState = 2
             }
         }
 
@@ -248,8 +251,8 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
         for (i in 0 until numberOfTubes) {
             tubeOffset[i] = (random.nextFloat() - 0.5f) * (gdxHeight.toFloat() - GAP - 200f)
             tubeX[i] = gdxWidth / 2f - topTubeWidth / 2f + gdxWidth.toFloat() + i * distanceBetweenTubes
-            topTubeRectangles[i] = Rectangle()
-            bottomTubeRectangles[i] = Rectangle()
+            topTubeRectangles[i] = SnapyrRectangle(collisionsEnabled)
+            bottomTubeRectangles[i] = SnapyrRectangle(collisionsEnabled)
         }
     }
 
