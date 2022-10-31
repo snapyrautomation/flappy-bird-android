@@ -15,11 +15,8 @@
  */
 package com.snapyr.flappybird
 
-import android.R
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.Context
-import android.util.Log
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -28,7 +25,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Circle
 import com.badlogic.gdx.math.Intersector
-import com.badlogic.gdx.math.Rectangle
+import com.snapyr.sdk.Snapyr
 import com.snapyr.sdk.inapp.InAppActionType
 import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppMessage
@@ -89,6 +86,7 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
                     .setTitle("Hi Score: $hiScore")
                     .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
                     .setPositiveButton("I'll... try I guess...") { _, _ ->
+                        Snapyr.with(context).trackInAppMessageClick(message.ActionToken)
                         collisionsEnabled = true
                         // resume game
                         renderState = RenderState.RUNNING
@@ -96,6 +94,7 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
                         Gdx.graphics.requestRendering()
                     }
                     .setNegativeButton("No way, I admit I suck") { _, _ ->
+                        Snapyr.with(context).trackInAppMessageDismiss(message.ActionToken)
                         // resume game
                         renderState = RenderState.RUNNING
                         Gdx.graphics.isContinuousRendering = true
@@ -105,6 +104,7 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
 
                 context.runOnUiThread {
                     alert.show()
+                    Snapyr.with(context).trackInAppMessageImpression(message.ActionToken)
                 }
             }
 

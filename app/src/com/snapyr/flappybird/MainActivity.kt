@@ -27,7 +27,7 @@ import com.github.kostasdrakonakis.annotation.Intent
 
 @Intent
 class MainActivity : AndroidApplication() {
-    var collisionsEnabled = true
+    var collisionsEnabled = false
     var startingScore = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
