@@ -16,6 +16,7 @@
 package com.snapyr.flappybird
 
 import android.R
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.util.Log
@@ -28,12 +29,16 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Circle
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Rectangle
+import com.snapyr.sdk.inapp.InAppActionType
+import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppMessage
+import com.snapyr.sdk.inapp.InAppPayloadType
 import java.util.*
 
 enum class RenderState { RUNNING, PAUSED }
 
-class FlappyBird(private val context: Context, private var collisionsEnabled: Boolean = false, private var score: Int = 0) : ApplicationAdapter() {
+class FlappyBird(private val context: Activity, private var collisionsEnabled: Boolean = false, private var score: Int = 0) : ApplicationAdapter(),
+    InAppCallback {
 
     private var initialCollisionsEnabled = collisionsEnabled
 
@@ -68,37 +73,39 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
     private var distanceBetweenTubes: Float = 0.toFloat()
     private var snapyr = try { SnapyrComponent.instance } catch (e: Exception) { SnapyrComponent.build(context) }
 
-    fun onInAppMessage(message: InAppMessage) {
+    override fun onAction(message: InAppMessage) {
+        if (message.ActionType != InAppActionType.ACTION_TYPE_CUSTOM || message.Content.type != InAppPayloadType.PAYLOAD_TYPE_JSON) {
+            return
+        }
         var jsonContent = message.Content.jsonPayload
         if (jsonContent != null) {
             var hiScore = jsonContent["hiScore"] as Double
             var alertMsg = jsonContent["message"] as String
             if (hiScore >= 0) {
-                // We want to pause the game, show an alert saying "we're going to enable
-                // collisions", then resume the game after user accepts. But I couldn't figure out
-                // how to show an alert in front of the game in time, so just enabling collisions
+                renderState = RenderState.PAUSED
+                Gdx.graphics.isContinuousRendering = false
+                Gdx.graphics.requestRendering()
+                val alert = AlertDialog.Builder(context)
+                    .setTitle("Hi Score: $hiScore")
+                    .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
+                    .setPositiveButton("I'll... try I guess...") { _, _ ->
                 collisionsEnabled = true
+                        // resume game
+                        renderState = RenderState.RUNNING
+                        Gdx.graphics.isContinuousRendering = true
+                        Gdx.graphics.requestRendering()
+                    }
+                    .setNegativeButton("No way, I admit I suck") { _, _ ->
+                        // resume game
+                        renderState = RenderState.RUNNING
+                        Gdx.graphics.isContinuousRendering = true
+                        Gdx.graphics.requestRendering()
+                    }
+                    .setCancelable(false)
 
-//                renderState = RenderState.PAUSED
-//                Gdx.graphics.isContinuousRendering = false
-//                Gdx.graphics.requestRendering()
-//                AlertDialog.Builder(context)
-//                        .setTitle("Hi Score: $hiScore")
-//                        .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
-//                        .setPositiveButton("I'll... try I guess...") { _, _ ->
-//                            collisionsEnabled = true
-//                            // resume game
-//                            renderState = RenderState.RUNNING
-//                            Gdx.graphics.isContinuousRendering = true
-//                            Gdx.graphics.requestRendering()
-//                        }
-//                        .setNegativeButton("No way, I admit I suck") { _, _ ->
-//                            // resume game
-//                            renderState = RenderState.RUNNING
-//                            Gdx.graphics.isContinuousRendering = true
-//                            Gdx.graphics.requestRendering()
-//                        }
-//                        .show()
+                context.runOnUiThread {
+                    alert.show()
+                }
             }
 
         }
@@ -129,6 +136,8 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
         topTubeHeight = topTube.height
         bottomTubeWidth = bottomTube.width
         bottomTubeHeight = bottomTube.height
+
+        snapyr.registerInAppListener("mainGame", this)
 
         startGame()
     }

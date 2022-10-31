@@ -38,7 +38,7 @@ class MainActivity : AndroidApplication() {
             handleOpenIntent(currentIntent)
         }
 
-        initialize(FlappyBird(context, collisionsEnabled, startingScore), AndroidApplicationConfiguration())
+        initialize(FlappyBird(this, collisionsEnabled, startingScore), AndroidApplicationConfiguration())
     }
 
     private fun handleOpenIntent(data: Uri?) {
@@ -46,7 +46,7 @@ class MainActivity : AndroidApplication() {
             return
         }
         val isCorrect = data.getQueryParameter("correct")
-        Log.d("isCorrect", isCorrect.toString())
+        Log.d("SnapyrFlappy", "isCorrect: " + isCorrect.toString())
         if (isCorrect != null && isCorrect != "") {
             if(isCorrect == "true")
                 correct()

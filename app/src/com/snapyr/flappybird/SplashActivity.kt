@@ -233,8 +233,8 @@ class SplashActivity : Activity(), InAppCallback {
         }
     }
 
-    override fun onAction(message: InAppMessage?) {
-        if (message == null || message.ActionType != InAppActionType.ACTION_TYPE_CUSTOM) {
+    override fun onAction(message: InAppMessage) {
+        if (message.ActionType != InAppActionType.ACTION_TYPE_CUSTOM) {
             return
         }
         if (message.Content.type == InAppPayloadType.PAYLOAD_TYPE_HTML) {
@@ -248,6 +248,7 @@ class SplashActivity : Activity(), InAppCallback {
                 Snapyr.with(this).trackInAppMessageImpression(message.ActionToken);
             }
         }
-        Log.e("Snapyr", message.asValueMap().toJsonObject().toString());
+
+        Log.e("SnapyrFlappy", message.asValueMap().toJsonObject().toString());
     }
 }

@@ -51,7 +51,7 @@ class SnapyrComponent private constructor(private val context: Context) {
                     ourInstance = SnapyrComponent(context)
                 }
                 var snapyr = Snapyr.Builder(context, SnapyrData.instance.identifyKey)
-                Log.d("singleton.env", ourInstance!!.snapyrData.env);
+                Log.d("SnapyrFlappy", "singleton.env: " + ourInstance!!.snapyrData.env);
                 if (ourInstance!!.snapyrData.env == "dev")
                     snapyr.enableDevEnvironment()
                 if (ourInstance!!.snapyrData.env == "stg")
@@ -89,7 +89,7 @@ class SnapyrComponent private constructor(private val context: Context) {
     private fun userInAppCallback(message: InAppMessage) {
         Log.println(
                 Log.INFO,
-                "SnapyrInApp",
+                "SnapyrFlappy",
                 """inapp cb triggered: 
 	${message.Timestamp}
 	${message.ActionType}
@@ -126,7 +126,7 @@ class SnapyrComponent private constructor(private val context: Context) {
 
 
     internal fun onDoTrack() {
-        Log.d("onDoTrack", "Track tapped")
+        Log.d("SnapyrFlappy", "onDoTrack: Track tapped")
         val prefs1 = PreferenceManager.getDefaultSharedPreferences(context)
         if (!prefs1.getBoolean("register", false)) {
             Snapyr.with(context).track("register1")
@@ -137,12 +137,12 @@ class SnapyrComponent private constructor(private val context: Context) {
     }
 
     internal fun yourScore(scoreNumber: Int) {
-        Log.d("onDoTrack", "Track tapped")
+        Log.d("SnapyrFlappy", "onDoTrack: Track tapped")
         Snapyr.with(context).track("score", Properties().putValue("total", scoreNumber));
     }
 
     internal fun onDoFlush() {
-        Log.d("onDoFlush", "Flush tapped")
+        Log.d("SnapyrFlappy", "onDoFlush: Flush tapped")
         Snapyr.with(context).flush()
     }
 
