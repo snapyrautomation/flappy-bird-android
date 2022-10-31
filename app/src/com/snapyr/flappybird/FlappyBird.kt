@@ -15,10 +15,8 @@
  */
 package com.snapyr.flappybird
 
-import android.R
+import android.app.Activity
 import android.app.AlertDialog
-import android.content.Context
-import android.util.Log
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -27,13 +25,17 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.Circle
 import com.badlogic.gdx.math.Intersector
-import com.badlogic.gdx.math.Rectangle
+import com.snapyr.sdk.Snapyr
+import com.snapyr.sdk.inapp.InAppActionType
+import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppMessage
+import com.snapyr.sdk.inapp.InAppPayloadType
 import java.util.*
 
 enum class RenderState { RUNNING, PAUSED }
 
-class FlappyBird(private val context: Context, private var collisionsEnabled: Boolean = false, private var score: Int = 0) : ApplicationAdapter() {
+class FlappyBird(private val context: Activity, private var collisionsEnabled: Boolean = false, private var score: Int = 0) : ApplicationAdapter(),
+    InAppCallback {
 
     private var initialCollisionsEnabled = collisionsEnabled
 
@@ -41,8 +43,8 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
     private lateinit var background: Texture
     private lateinit var gameOver: Texture
     private lateinit var birds: Array<Texture>
-    private lateinit var topTubeRectangles: Array<Rectangle?>
-    private lateinit var bottomTubeRectangles: Array<Rectangle?>
+    private lateinit var topTubeRectangles: Array<SnapyrRectangle?>
+    private lateinit var bottomTubeRectangles: Array<SnapyrRectangle?>
     private lateinit var birdCircle: Circle
     private lateinit var font: BitmapFont
     private lateinit var topTube: Texture
@@ -68,37 +70,42 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
     private var distanceBetweenTubes: Float = 0.toFloat()
     private var snapyr = try { SnapyrComponent.instance } catch (e: Exception) { SnapyrComponent.build(context) }
 
-    fun onInAppMessage(message: InAppMessage) {
-        var jsonContent = message.Content.jsonContent
+    override fun onAction(message: InAppMessage) {
+        if (message.ActionType != InAppActionType.ACTION_TYPE_CUSTOM || message.Content.type != InAppPayloadType.PAYLOAD_TYPE_JSON) {
+            return
+        }
+        var jsonContent = message.Content.jsonPayload
         if (jsonContent != null) {
             var hiScore = jsonContent["hiScore"] as Double
             var alertMsg = jsonContent["message"] as String
             if (hiScore >= 0) {
-                // We want to pause the game, show an alert saying "we're going to enable
-                // collisions", then resume the game after user accepts. But I couldn't figure out
-                // how to show an alert in front of the game in time, so just enabling collisions
-                collisionsEnabled = true
+                renderState = RenderState.PAUSED
+                Gdx.graphics.isContinuousRendering = false
+                Gdx.graphics.requestRendering()
+                val alert = AlertDialog.Builder(context)
+                    .setTitle("Hi Score: $hiScore")
+                    .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
+                    .setPositiveButton("I'll... try I guess...") { _, _ ->
+                        Snapyr.with(context).trackInAppMessageClick(message.ActionToken)
+                        collisionsEnabled = true
+                        // resume game
+                        renderState = RenderState.RUNNING
+                        Gdx.graphics.isContinuousRendering = true
+                        Gdx.graphics.requestRendering()
+                    }
+                    .setNegativeButton("No way, I admit I suck") { _, _ ->
+                        Snapyr.with(context).trackInAppMessageDismiss(message.ActionToken)
+                        // resume game
+                        renderState = RenderState.RUNNING
+                        Gdx.graphics.isContinuousRendering = true
+                        Gdx.graphics.requestRendering()
+                    }
+                    .setCancelable(false)
 
-//                renderState = RenderState.PAUSED
-//                Gdx.graphics.isContinuousRendering = false
-//                Gdx.graphics.requestRendering()
-//                AlertDialog.Builder(context)
-//                        .setTitle("Hi Score: $hiScore")
-//                        .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
-//                        .setPositiveButton("I'll... try I guess...") { _, _ ->
-//                            collisionsEnabled = true
-//                            // resume game
-//                            renderState = RenderState.RUNNING
-//                            Gdx.graphics.isContinuousRendering = true
-//                            Gdx.graphics.requestRendering()
-//                        }
-//                        .setNegativeButton("No way, I admit I suck") { _, _ ->
-//                            // resume game
-//                            renderState = RenderState.RUNNING
-//                            Gdx.graphics.isContinuousRendering = true
-//                            Gdx.graphics.requestRendering()
-//                        }
-//                        .show()
+                context.runOnUiThread {
+                    alert.show()
+                    Snapyr.with(context).trackInAppMessageImpression(message.ActionToken)
+                }
             }
 
         }
@@ -129,6 +136,8 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
         topTubeHeight = topTube.height
         bottomTubeWidth = bottomTube.width
         bottomTubeHeight = bottomTube.height
+
+        snapyr.registerInAppListener("mainGame", this)
 
         startGame()
     }
@@ -170,15 +179,17 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
                         tubeX[i],
                         gdxHeight / 2f - GAP / 2 - bottomTubeHeight.toFloat() + tubeOffset[i])
 
-                topTubeRectangles[i] = Rectangle(tubeX[i],
+                topTubeRectangles[i] = SnapyrRectangle(tubeX[i],
                         gdxHeight / 2f + GAP / 2 + tubeOffset[i],
                         topTubeWidth.toFloat(),
-                        topTubeHeight.toFloat())
+                        topTubeHeight.toFloat(),
+                        collisionsEnabled)
 
-                bottomTubeRectangles[i] = Rectangle(tubeX[i],
+                bottomTubeRectangles[i] = SnapyrRectangle(tubeX[i],
                         gdxHeight / 2f - GAP / 2 - bottomTubeHeight.toFloat() + tubeOffset[i],
                         bottomTubeWidth.toFloat(),
-                        bottomTubeHeight.toFloat())
+                        bottomTubeHeight.toFloat(),
+                        collisionsEnabled)
             }
 
             if (birdY >= 0) {
@@ -222,9 +233,10 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
                 birds[flapState].width / 2f)
 
         for (i in 0 until numberOfTubes) {
-            if (Intersector.overlaps(birdCircle, topTubeRectangles[i])
-                    || Intersector.overlaps(birdCircle, bottomTubeRectangles[i])) {
-                gameState = if (collisionsEnabled) 2 else 1
+            if (Intersector.overlaps(birdCircle, topTubeRectangles[i]) && topTubeRectangles[i]?.collisionsEnabled == true) {
+                gameState = 2
+            } else if (Intersector.overlaps(birdCircle, topTubeRectangles[i]) && topTubeRectangles[i]?.collisionsEnabled == true) {
+                gameState = 2
             }
         }
 
@@ -239,8 +251,8 @@ class FlappyBird(private val context: Context, private var collisionsEnabled: Bo
         for (i in 0 until numberOfTubes) {
             tubeOffset[i] = (random.nextFloat() - 0.5f) * (gdxHeight.toFloat() - GAP - 200f)
             tubeX[i] = gdxWidth / 2f - topTubeWidth / 2f + gdxWidth.toFloat() + i * distanceBetweenTubes
-            topTubeRectangles[i] = Rectangle()
-            bottomTubeRectangles[i] = Rectangle()
+            topTubeRectangles[i] = SnapyrRectangle(collisionsEnabled)
+            bottomTubeRectangles[i] = SnapyrRectangle(collisionsEnabled)
         }
     }
 
