@@ -76,7 +76,17 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
         }
         var jsonContent = message.Content.jsonPayload
         if (jsonContent != null) {
-            var hiScore = jsonContent["hiScore"] as Double
+            var hiScoreRaw = jsonContent["hiScore"]
+            var hiScore = 0.0
+            if (hiScoreRaw is String) {
+                hiScore = hiScoreRaw.toDoubleOrNull() ?: 0.0
+            } else {
+                try {
+                    hiScore = hiScoreRaw as Double
+                } catch (e: Exception) {
+                    hiScore = 0.0
+                }
+            }
             var alertMsg = jsonContent["message"] as String
             if (hiScore >= 0) {
                 renderState = RenderState.PAUSED

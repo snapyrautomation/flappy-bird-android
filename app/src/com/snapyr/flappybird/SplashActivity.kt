@@ -249,6 +249,6 @@ class SplashActivity : Activity(), InAppCallback {
             }
         }
 
-        Log.e("SnapyrFlappy", message.asValueMap().toJsonObject().toString());
+        Log.e("SnapyrFlappy", message.asValueMap().toString());
     }
 }
