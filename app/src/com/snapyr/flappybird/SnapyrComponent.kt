@@ -35,6 +35,9 @@ class SnapyrComponent private constructor(private val context: Context) {
     companion object {
         private var ourInstance: SnapyrComponent? = null
 
+        val hasInstance: Boolean
+            get() = ourInstance != null
+
         val instance: SnapyrComponent
             get() {
                 synchronized(SnapyrComponent) {
@@ -57,19 +60,20 @@ class SnapyrComponent private constructor(private val context: Context) {
                 if (ourInstance!!.snapyrData.env == "stg")
                     snapyr.enableStageEnvironment()
                 snapyr.enableSnapyrPushHandling()
-                        .trackApplicationLifecycleEvents() // Enable this to record certain application events automatically
-                        .recordScreenViews() // Enable this to record screen views automatically
-                        .flushQueueSize(1)
-                        .configureInAppHandling(
-                                InAppConfig()
-                                        .setPollingRate(30000)
-                                        .setActionCallback { inAppMessage: InAppMessage? ->
-                                            if (inAppMessage != null) {
-                                                ourInstance!!.userInAppCallback(
-                                                        inAppMessage
-                                                )
-                                            }
-                                        })
+                    .logLevel(Snapyr.LogLevel.VERBOSE)
+                    .trackApplicationLifecycleEvents() // Enable this to record certain application events automatically
+                    .recordScreenViews() // Enable this to record screen views automatically
+                    .flushQueueSize(1)
+                    .configureInAppHandling(
+                        InAppConfig()
+                            .setPollingRate(30000)
+                            .setActionCallback { inAppMessage: InAppMessage? ->
+                                if (inAppMessage != null) {
+                                    ourInstance!!.userInAppCallback(
+                                        inAppMessage
+                                    )
+                                }
+                            })
                 ;
                 val prefs = PreferenceManager.getDefaultSharedPreferences(context)
                 if (!prefs.getBoolean("firstTime", false)) {

@@ -37,9 +37,52 @@
                 <data android:scheme="snappybirds" android:host="demo" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".GlobalLeaderBoardActivityKt"
+            android:configChanges="keyboardHidden|orientation"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:windowSoftInputMode="stateHidden">
+            <intent-filter
+                android:autoVerify="true"
+                >
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:host="snapyrtest.app" />
+                <data android:pathPrefix="/leader-board" />
+                <data android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".NewsFeedActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:windowSoftInputMode="adjustResize|stateUnchanged">
+            <intent-filter
+                android:autoVerify="true"
+                >
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:host="snapyrtest.app" />
+                <data android:pathPrefix="/home-screen" />
+                <data android:scheme="https" />
+            </intent-filter>
+        </activity>
+
         <!-- Used by Snapyr to automatically track notification receipt/interaction -->
         <activity android:name="com.snapyr.sdk.notifications.SnapyrNotificationListener"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.snapyr.sdk.notifications.TRACK_BROADCAST" />
                 <category android:name="android.intent.category.DEFAULT" />

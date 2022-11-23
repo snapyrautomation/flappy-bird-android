@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Flappy Bird</string>
+
+    <string name="pushtest_bad_url">birdsPushTestBadUrl</string>
+    <string name="pushtest_leaderboard">birdsPushTestLeaderboard</string>
+    <string name="pushtest_homescreen">birdsPushTestHomescreen</string>
+    <string name="pushtest_no_deeplink">birdsPushTestNoDeeplink</string>
+
+    <string name="singletask_description">This is a <b><u>singleTask</u></b> activity.
+        Consecutive deep links should keep the same activity and trigger
+        <b>onNewIntent()</b> and <b>onResume()</b>.
+    </string>
+    <string name="standard_activity_description">This is a <b><u>standard</u></b> activity.
+        Consecutive deep links should each open a new activity instance and trigger
+        <b>onCreate()</b>, <b>onStart()</b>, and <b>onResume()</b>.
+    </string>
 </resources>

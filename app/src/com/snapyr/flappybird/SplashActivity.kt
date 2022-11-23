@@ -16,7 +16,6 @@
 package com.snapyr.flappybird
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
@@ -35,12 +34,12 @@ import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
 import com.snapyr.sdk.inapp.InAppActionType
 import com.snapyr.sdk.inapp.InAppCallback
-import com.snapyr.sdk.inapp.InAppPayloadType
 import com.snapyr.sdk.inapp.InAppMessage
+import com.snapyr.sdk.inapp.InAppPayloadType
 import kotlinx.android.synthetic.main.activity_splash.*
 
 
-class SplashActivity : Activity(), InAppCallback {
+class SplashActivity : DebugActivityBase(), InAppCallback {
     private var snapyrInitialized = false
     var snapyrData: SnapyrData = SnapyrData.instance
 
@@ -53,7 +52,7 @@ class SplashActivity : Activity(), InAppCallback {
     private lateinit var identifyName: EditText
     private lateinit var identifyPhone: EditText
 
-    fun initializeSnapyr() {
+    private fun initializeSnapyr() {
         if (snapyrInitialized) {
             Toast.makeText(this, "Snapyr already initialized; restart app to initialize again", Toast.LENGTH_LONG).show()
             return
@@ -65,11 +64,11 @@ class SplashActivity : Activity(), InAppCallback {
         snapyrData.identifyName = identifyName.text.toString()
         snapyrData.identifyPhone = identifyPhone.text.toString()
 
-        var snapyr = SnapyrComponent.build(this.applicationContext)
-        snapyr.onDoReset()
-        snapyr.onDoIdentify()
+        var snapyrHelper = SnapyrComponent.build(this.applicationContext)
+        snapyrHelper.onDoReset()
+        snapyrHelper.onDoIdentify()
 
-        snapyr.registerInAppListener("splash", this)
+        snapyrHelper.registerInAppListener("splash", this)
 
         snapyrInitialized = true
 
@@ -145,6 +144,22 @@ class SplashActivity : Activity(), InAppCallback {
             onReachedVipClick(it)
         }
 
+        pushtest_bad_url.setOnClickListener {
+            onBadUrlClick()
+        }
+
+        pushtest_leaderboard.setOnClickListener {
+            onLeaderboardClick()
+        }
+
+        pushtest_homescreen.setOnClickListener {
+            onHomescreenClick()
+        }
+
+        pushtest_no_deeplink.setOnClickListener {
+            onNoDeeplinkClick()
+        }
+
         setupWebView()
     }
 
@@ -186,16 +201,18 @@ class SplashActivity : Activity(), InAppCallback {
 
     private fun dismissInAppWebview() {
         try {
-            var snapyr = SnapyrComponent.instance
-            // Intention for deregistering here was to prevent in-app callbacks from running in this Activity after
-            // user has switched to another Activity (the game). That doesn't seem to be necessary, as the OS suspends
-            // this activity and the callback doesn't run. If the user goes back to this activity, the callbacks start
-            // working again.
-//            snapyr.deregisterInAppListener("splash")
-            // We don't give the user a direct way to dismiss custom HTML message in this app, but treat as dismiss if they close this
-            // screen without interacting with the webview
-            if (currentInAppMessage != null && !currentMessageInteracted) {
-                Snapyr.with(this).trackInAppMessageDismiss(currentInAppMessage!!.ActionToken)
+            if (SnapyrComponent.hasInstance) {
+                var snapyr = SnapyrComponent.instance
+                // Intention for deregistering here was to prevent in-app callbacks from running in this Activity after
+                // user has switched to another Activity (the game). That doesn't seem to be necessary, as the OS suspends
+                // this activity and the callback doesn't run. If the user goes back to this activity, the callbacks start
+                // working again.
+                //            snapyr.deregisterInAppListener("splash")
+                // We don't give the user a direct way to dismiss custom HTML message in this app, but treat as dismiss if they close this
+                // screen without interacting with the webview
+                if (currentInAppMessage != null && !currentMessageInteracted) {
+                    Snapyr.with(this).trackInAppMessageDismiss(currentInAppMessage!!.ActionToken)
+                }
             }
         } catch (e: Exception) {
             Log.e("SnapyrFlappy", "Caught error:", e)
@@ -217,20 +234,28 @@ class SplashActivity : Activity(), InAppCallback {
         dismissInAppWebview()
     }
 
-    fun onPlayerStinksClick(v: View) {
-        try {
-            Snapyr.with(this).track("userStinks")
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error running track - did you forget to initialize Snapyr?", Toast.LENGTH_SHORT).show()
-        }
+    private fun onBadUrlClick() {
+        safeTrack("birdsPushTestBadUrl")
     }
 
-    fun onReachedVipClick(v: View) {
-        try {
-            Snapyr.with(this).track("userRules")
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error running track - did you forget to initialize Snapyr?", Toast.LENGTH_SHORT).show()
-        }
+    private fun onLeaderboardClick() {
+        safeTrack("birdsPushTestLeaderboard")
+    }
+
+    private fun onHomescreenClick() {
+        safeTrack("birdsPushTestHomescreen")
+    }
+
+    private fun onNoDeeplinkClick() {
+        safeTrack("birdsPushTestNoDeeplink")
+    }
+
+    private fun onPlayerStinksClick(v: View) {
+        safeTrack("userStinks")
+    }
+
+    private fun onReachedVipClick(v: View) {
+        safeTrack("userRules")
     }
 
     override fun onAction(message: InAppMessage) {
@@ -249,6 +274,6 @@ class SplashActivity : Activity(), InAppCallback {
             }
         }
 
-        Log.e("SnapyrFlappy", message.asValueMap().toString());
+        Log.d("SnapyrFlappy", "onAction: " + message.asValueMap().toString());
     }
 }
