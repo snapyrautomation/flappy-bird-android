@@ -65,6 +65,11 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
         snapyrData.identifyPhone = identifyPhone.text.toString()
 
         var snapyrHelper = SnapyrComponent.build(this.applicationContext)
+        // replay events to ensure Snapyr is aware of this activity (needed because we're late-initializing Snapyr from the Activity - normally it would be done on main app startup and would catch this activity automatically)
+        Snapyr.with(this).replayLifecycleOnActivityCreated(this, null)
+        Snapyr.with(this).replayLifecycleOnActivityStarted(this)
+        Snapyr.with(this).replayLifecycleOnActivityResumed(this)
+
         snapyrHelper.onDoReset()
         snapyrHelper.onDoIdentify()
 
