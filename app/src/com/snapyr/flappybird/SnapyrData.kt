@@ -27,7 +27,7 @@ class SnapyrData private constructor(val context: Context) {
                 prefEditor.putString("env", value)
                 prefEditor.apply()
             }
-        var identifyKey: String = preferences.getString("identifyKey", "")!!
+        var sdkWriteKey: String = preferences.getString("identifyKey", "")!!
             set(value) {
                 field = value
                 prefEditor.putString("identifyKey", value)
@@ -55,6 +55,12 @@ class SnapyrData private constructor(val context: Context) {
             set(value) {
                 field = value
                 prefEditor.putString("identifyPhone", value)
+                prefEditor.apply()
+            }
+        var needsReset: Boolean = preferences.getBoolean("needsReset", false)
+            set(value) {
+                field = value
+                prefEditor.putBoolean("needsReset", value)
                 prefEditor.apply()
             }
 }

@@ -35,6 +35,9 @@ class SnapyrComponent private constructor(private val context: Context) {
     companion object {
         private var ourInstance: SnapyrComponent? = null
 
+        val hasInstance: Boolean
+            get() = ourInstance != null
+
         val instance: SnapyrComponent
             get() {
                 synchronized(SnapyrComponent) {
@@ -50,37 +53,33 @@ class SnapyrComponent private constructor(private val context: Context) {
                 if (ourInstance == null) {
                     ourInstance = SnapyrComponent(context)
                 }
-                var snapyr = Snapyr.Builder(context, SnapyrData.instance.identifyKey)
+                var snapyr = Snapyr.Builder(context, SnapyrData.instance.sdkWriteKey)
                 Log.d("SnapyrFlappy", "singleton.env: " + ourInstance!!.snapyrData.env);
                 if (ourInstance!!.snapyrData.env == "dev")
                     snapyr.enableDevEnvironment()
                 if (ourInstance!!.snapyrData.env == "stg")
                     snapyr.enableStageEnvironment()
                 snapyr.enableSnapyrPushHandling()
-                        .trackApplicationLifecycleEvents() // Enable this to record certain application events automatically
-                        .recordScreenViews() // Enable this to record screen views automatically
-                        .flushQueueSize(1)
-                        .configureInAppHandling(
-                                InAppConfig()
-                                        .setPollingRate(30000)
-                                        .setActionCallback { inAppMessage: InAppMessage? ->
-                                            if (inAppMessage != null) {
-                                                ourInstance!!.userInAppCallback(
-                                                        inAppMessage
-                                                )
-                                            }
-                                        })
+                    .logLevel(Snapyr.LogLevel.VERBOSE)
+                    .trackApplicationLifecycleEvents() // Enable this to record certain application events automatically
+                    .recordScreenViews() // Enable this to record screen views automatically
+                    .flushQueueSize(1)
+                    .configureInAppHandling(
+                        InAppConfig()
+                            .setPollingRate(30000)
+                            .setActionCallback { inAppMessage: InAppMessage? ->
+                                if (inAppMessage != null) {
+                                    ourInstance!!.userInAppCallback(
+                                        inAppMessage
+                                    )
+                                }
+                            })
                 ;
-                val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-                if (!prefs.getBoolean("firstTime", false)) {
-
-                    if (!Snapyr.Valid())
-                        Snapyr.setSingletonInstance(snapyr.build());
-                    val editor = prefs.edit()
-                    editor.putBoolean("firstTime", true)
-                    editor.putBoolean("register", false)
-                    editor.commit()
+                if (!Snapyr.Valid()) {
+                    Snapyr.setSingletonInstance(snapyr.build());
+                    Log.d("SnapyrFlappy", "Snapyr SDK initialized.")
                 }
+
                 return ourInstance!!
             }
         }

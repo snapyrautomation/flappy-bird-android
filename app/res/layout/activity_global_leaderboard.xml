@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        tools:context="com.snapyr.flappybird.GlobalLeaderBoardActivityKt">
+
+        <TextView
+            android:id="@+id/activity_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:paddingLeft="8dp"
+            android:textSize="40dp"
+            android:text="Global Leaderboard" />
+
+        <TextView
+            android:id="@+id/activity_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:paddingLeft="8dp"
+            android:text="@string/standard_activity_description" />
+
+        <Button
+            android:id="@+id/action_track_a_leaderboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/pushtest_leaderboard" />
+
+        <TextView
+            android:id="@+id/event_log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:paddingLeft="8dp"
+            android:textSize="16dp"
+            android:bufferType="editable" />
+
+    </LinearLayout>
+
+</ScrollView>
