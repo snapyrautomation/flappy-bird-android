@@ -53,7 +53,7 @@ class SnapyrComponent private constructor(private val context: Context) {
                 if (ourInstance == null) {
                     ourInstance = SnapyrComponent(context)
                 }
-                var snapyr = Snapyr.Builder(context, SnapyrData.instance.identifyKey)
+                var snapyr = Snapyr.Builder(context, SnapyrData.instance.sdkWriteKey)
                 Log.d("SnapyrFlappy", "singleton.env: " + ourInstance!!.snapyrData.env);
                 if (ourInstance!!.snapyrData.env == "dev")
                     snapyr.enableDevEnvironment()
@@ -75,16 +75,11 @@ class SnapyrComponent private constructor(private val context: Context) {
                                 }
                             })
                 ;
-                val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-                if (!prefs.getBoolean("firstTime", false)) {
-
-                    if (!Snapyr.Valid())
-                        Snapyr.setSingletonInstance(snapyr.build());
-                    val editor = prefs.edit()
-                    editor.putBoolean("firstTime", true)
-                    editor.putBoolean("register", false)
-                    editor.commit()
+                if (!Snapyr.Valid()) {
+                    Snapyr.setSingletonInstance(snapyr.build());
+                    Log.d("SnapyrFlappy", "Snapyr SDK initialized.")
                 }
+
                 return ourInstance!!
             }
         }

@@ -24,11 +24,14 @@ import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
+import android.widget.TextView
 import com.github.kostasdrakonakis.androidnavigator.IntentNavigator
 import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
@@ -52,50 +55,30 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
     private lateinit var identifyName: EditText
     private lateinit var identifyPhone: EditText
 
-    private fun initializeSnapyr() {
-        if (snapyrInitialized) {
-            Toast.makeText(this, "Snapyr already initialized; restart app to initialize again", Toast.LENGTH_LONG).show()
-            return
+    private fun doIdentify() {
+        if (identifyUserId.text.toString() != snapyrData.identifyUserId) {
+            SnapyrComponent.instance.onDoReset()
         }
 
         snapyrData.identifyUserId = identifyUserId.text.toString()
         snapyrData.identifyEmail = identifyEmail.text.toString()
-        snapyrData.identifyKey = identifyKey.text.toString()
         snapyrData.identifyName = identifyName.text.toString()
         snapyrData.identifyPhone = identifyPhone.text.toString()
 
-        var snapyrHelper = SnapyrComponent.build(this.applicationContext)
-        // replay events to ensure Snapyr is aware of this activity (needed because we're late-initializing Snapyr from the Activity - normally it would be done on main app startup and would catch this activity automatically)
-        Snapyr.with(this).replayLifecycleOnActivityCreated(this, null)
-        Snapyr.with(this).replayLifecycleOnActivityStarted(this)
-        Snapyr.with(this).replayLifecycleOnActivityResumed(this)
-
-        snapyrHelper.onDoReset()
-        snapyrHelper.onDoIdentify()
-
-        snapyrHelper.registerInAppListener("splash", this)
-
-        snapyrInitialized = true
-
-        // disable inputs now that we've initialized
-        identifyUserId.isEnabled = false
-        identifyKey.isEnabled = false
-        identifyEmail.isEnabled = false
-        identifyName.isEnabled = false
-        identifyPhone.isEnabled = false
-        env.isEnabled = false
-        initSnapyrButton.isEnabled = false
+        SnapyrComponent.instance.onDoIdentify()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        identifyUserId = findViewById<EditText>(R.id.identify_userid);
-        identifyUserId.setText(snapyrData.identifyUserId)
+        SnapyrComponent.instance.registerInAppListener("splash", this)
 
         identifyKey = findViewById<EditText>(R.id.identify_key);
-        identifyKey.setText(snapyrData.identifyKey)
+        identifyUserId = findViewById<EditText>(R.id.identify_userid);
+
+        identifyKey.setText(snapyrData.sdkWriteKey)
+        identifyUserId.setText(snapyrData.identifyUserId)
 
         identifyEmail = findViewById<EditText>(R.id.identify_email);
         identifyEmail.setText(snapyrData.identifyEmail)
@@ -106,39 +89,18 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
         identifyPhone = findViewById<EditText>(R.id.identify_phone);
         identifyPhone.setText(snapyrData.identifyPhone);
 
-        env.text = "Env: " + snapyrData.env
+        current_env.setText("ENV: " + snapyrData.env)
 
-        initSnapyrButton.setOnClickListener {
-            initializeSnapyr()
+        doIdentifyButton.setOnClickListener {
+            this.doIdentify()
         }
 
         playButton.setOnClickListener {
-            if (!snapyrInitialized) {
-                initializeSnapyr()
-            }
             IntentNavigator.startMainActivity(this)
         }
 
-        env.setOnClickListener{
-            val builder = AlertDialog.Builder(this)
-                .setTitle("Choose Env!")
-            builder.setPositiveButton("dev") { dialog, which ->
-                snapyrData.env = "dev"
-                identifyKey.setText("38bT1SbGJ0A12CJqk8DFRzypJnIylRmg")
-                env.text = "Env: dev"
-
-            }
-            builder.setNeutralButton("prod") { dialog, which ->
-                snapyrData.env = "prod"
-                identifyKey.setText("HheJr6JJGowjvMvJGq9FqunE0h8EKAIG")
-                env.text = "Env: prod"
-            }
-            builder.setNegativeButton("stg") { dialog, which ->
-                snapyrData.env = "stg"
-                identifyKey.setText("kuxCvTgQdcXAgNjrhrMP2U46VIhUi6Wz")
-                env.text = "Env: stg"
-            }
-            builder.show()
+        changeEnvOrKey.setOnClickListener{
+            onChangeEnvOrKey()
         }
 
         playerStinksButton.setOnClickListener {
@@ -166,6 +128,87 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
         }
 
         setupWebView()
+    }
+
+    private fun onChangeEnvOrKey() {
+        val alertView = layoutInflater.inflate(R.layout.alert_writekey_env, null)
+        // Multiple dialog opens reuse the same inflated view - it needs to be removed from its parent before subsequent display or it will crash
+        if (alertView.parent != null) {
+            (alertView.parent as ViewGroup).removeView(alertView)
+        }
+
+        val writeKeyInput = alertView.findViewById<EditText>(R.id.alert_sdk_writekey)
+        val envLabel = alertView.findViewById<TextView>(R.id.alert_env)
+        val devButton = alertView.findViewById<Button>(R.id.alert_env_dev)
+        val stageButton = alertView.findViewById<Button>(R.id.alert_env_stage)
+        val prodButton = alertView.findViewById<Button>(R.id.alert_env_prod)
+        var selectedEnv = snapyrData.env
+
+        writeKeyInput.setText(snapyrData.sdkWriteKey)
+        envLabel.text = "Env: " + selectedEnv
+
+        devButton.setOnClickListener {
+            selectedEnv = "dev"
+            writeKeyInput.setText("MsZEepxHLRM9d7CU0ClTC84T0E9w9H8w")
+            envLabel.text = "Env: dev"
+        }
+        stageButton.setOnClickListener {
+            selectedEnv = "stg"
+            writeKeyInput.setText("kuxCvTgQdcXAgNjrhrMP2U46VIhUi6Wz")
+            envLabel.text = "Env: stg"
+        }
+        prodButton.setOnClickListener {
+            selectedEnv = "prod"
+            writeKeyInput.setText("HheJr6JJGowjvMvJGq9FqunE0h8EKAIG")
+            envLabel.text = "Env: prod"
+        }
+
+        val builder = AlertDialog.Builder(this)
+            .setTitle("SDK Write Key and Environment")
+        builder.setView(alertView)
+
+        builder.setPositiveButton(android.R.string.ok) { dialog, which ->
+            val isChanged = (selectedEnv != snapyrData.env || writeKeyInput.text.toString() != snapyrData.sdkWriteKey)
+            if (!isChanged) {
+                return@setPositiveButton
+            }
+            snapyrData.needsReset = true
+            snapyrData.env = selectedEnv
+            changeEnvOrKey.text = "Env: " + selectedEnv
+            snapyrData.sdkWriteKey = writeKeyInput.text.toString()
+            identifyKey.setText(writeKeyInput.text.toString())
+            showRestartRequiredAlert()
+        }
+        .setNegativeButton(android.R.string.cancel) { _, _ -> }
+
+        val dialog = builder.create()
+        // Make the dialog full screen width
+        val layoutParams = WindowManager.LayoutParams()
+        layoutParams.copyFrom(dialog.window!!.attributes)
+        layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+        layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
+        dialog.show()
+        dialog.window!!.attributes = layoutParams
+    }
+
+    private fun showRestartRequiredAlert() {
+        AlertDialog.Builder(this)
+            .setTitle("Restart Snappy Bird to apply changes")
+            .setMessage("Your settings will be applied the next time you run the app. Please force quit and restart Snappy Bird.")
+            .setPositiveButton("Restart now") { _, _ ->
+                triggerRestart()
+            }
+            .setOnDismissListener {
+                triggerRestart()
+            }
+            .show()
+    }
+
+    fun triggerRestart() {
+        // Force restart of the app, back to this activity
+        val intent = Intent(applicationContext, this.javaClass)
+        this.startActivity(intent)
+        Runtime.getRuntime().exit(0)
     }
 
     @SuppressLint("ClickableViewAccessibility")

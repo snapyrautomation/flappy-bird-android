@@ -15,25 +15,45 @@
             android:id="@+id/topBanner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             tools:ignore="WebViewLayout" />
-        
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <EditText
-                    android:id="@+id/identify_key"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:layout_weight="0.55"
-                    android:hint="SDK Write Key"
+                    android:orientation="horizontal"
+                    android:weightSum="1">
 
-                    />
+                    <TextView
+                        android:id="@+id/current_env"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0"
+                        android:gravity="center_vertical"
+                        android:paddingRight="8dp"
+                        android:text="Env:"
+                        android:textColor="@android:color/black" />
+
+                    <EditText
+                        android:id="@+id/identify_key"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_weight="1"
+                        android:enabled="false"
+                        android:hint="SDK Write Key"
+                        android:textSize="14dp" />
+                </LinearLayout>
+
 
                 <EditText
                     android:id="@+id/identify_userid"
@@ -66,44 +86,75 @@
                     android:layout_weight="0.55"
                     android:hint="Phone" />
 
-                <Button
-                    android:id="@+id/env"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:text="Env" />
+                    android:orientation="horizontal"
+                    android:weightSum="1">
 
-                <Button
-                    android:id="@+id/initSnapyrButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:text="Initialize Snapyr" />
+                    <Button
+                        android:id="@+id/doIdentifyButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_weight="0.5"
+                        android:text="Identify" />
 
-                <Button
-                    android:id="@+id/pushtest_bad_url"
+                    <Button
+                        android:id="@+id/changeEnvOrKey"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_weight="0.5"
+                        android:text="Change SDK Key + Env" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="@string/pushtest_bad_url" />
+                    android:orientation="horizontal"
+                    android:weightSum="1">
 
-                <Button
-                    android:id="@+id/pushtest_homescreen"
+                    <Button
+                        android:id="@+id/pushtest_bad_url"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:text="@string/pushtest_bad_url"
+                        android:textSize="13dp" />
+
+                    <Button
+                        android:id="@+id/pushtest_homescreen"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:text="@string/pushtest_homescreen"
+                        android:textSize="13dp" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/pushtest_homescreen" />
+                    android:orientation="horizontal"
+                    android:weightSum="1">
 
-                <Button
-                    android:id="@+id/pushtest_leaderboard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/pushtest_leaderboard" />
+                    <Button
+                        android:id="@+id/pushtest_leaderboard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:text="@string/pushtest_leaderboard"
+                        android:textSize="13dp" />
 
-                <Button
-                    android:id="@+id/pushtest_no_deeplink"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/pushtest_no_deeplink" />
+                    <Button
+                        android:id="@+id/pushtest_no_deeplink"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:text="@string/pushtest_no_deeplink"
+                        android:textSize="13dp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -115,17 +166,17 @@
                     <Button
                         android:id="@+id/playerStinksButton"
                         android:layout_width="match_parent"
-                        android:layout_weight="0.5"
                         android:layout_height="wrap_content"
                         android:layout_alignParentTop="true"
+                        android:layout_weight="0.5"
                         android:text="Player Stinks event" />
 
                     <Button
                         android:id="@+id/reachedVipButton"
                         android:layout_width="match_parent"
-                        android:layout_weight="0.5"
                         android:layout_height="wrap_content"
                         android:layout_alignParentTop="true"
+                        android:layout_weight="0.5"
                         android:text="Reached VIP event" />
 
                 </LinearLayout>
@@ -149,9 +200,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:bufferType="editable"
                     android:paddingLeft="8dp"
-                    android:textSize="16dp"
-                    android:bufferType="editable" />
+                    android:textSize="16dp" />
 
             </LinearLayout>
 
