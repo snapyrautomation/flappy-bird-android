@@ -149,17 +149,17 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
 
         devButton.setOnClickListener {
             selectedEnv = "dev"
-            writeKeyInput.setText("MsZEepxHLRM9d7CU0ClTC84T0E9w9H8w")
+            writeKeyInput.setText(SnapyrData.DEFAULT_WRITE_KEY_DEV)
             envLabel.text = "Env: dev"
         }
         stageButton.setOnClickListener {
             selectedEnv = "stg"
-            writeKeyInput.setText("kuxCvTgQdcXAgNjrhrMP2U46VIhUi6Wz")
+            writeKeyInput.setText(SnapyrData.DEFAULT_WRITE_KEY_STAGE)
             envLabel.text = "Env: stg"
         }
         prodButton.setOnClickListener {
             selectedEnv = "prod"
-            writeKeyInput.setText("HheJr6JJGowjvMvJGq9FqunE0h8EKAIG")
+            writeKeyInput.setText(SnapyrData.DEFAULT_WRITE_KEY_PROD)
             envLabel.text = "Env: prod"
         }
 
