@@ -17,6 +17,7 @@ package com.snapyr.flappybird
 
 import android.app.Activity
 import android.app.AlertDialog
+import androidx.core.text.HtmlCompat
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -78,37 +79,37 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
         if (jsonContent != null) {
             var hiScoreRaw = jsonContent["hiScore"]
             var hiScore = 0.0
-            if (hiScoreRaw is String) {
-                hiScore = hiScoreRaw.toDoubleOrNull() ?: 0.0
-            } else {
-                try {
+            var alertMsgRaw = jsonContent["message"]
+            var alertMsg: String = ""
+
+            try {
+                alertMsg = alertMsgRaw as String
+                if (hiScoreRaw is String) {
+                    hiScore = hiScoreRaw.toDoubleOrNull() ?: 0.0
+                } else {
                     hiScore = hiScoreRaw as Double
-                } catch (e: Exception) {
-                    hiScore = 0.0
                 }
+            } catch (e: Exception) {
+                // Invalid JSON message - warn and stop
+                pauseGame()
+                showInvalidJsonDialog()
+                Snapyr.with(context).trackInAppMessageImpression(message.ActionToken)
+                return
             }
-            var alertMsg = jsonContent["message"] as String
+
             if (hiScore >= 0) {
-                renderState = RenderState.PAUSED
-                Gdx.graphics.isContinuousRendering = false
-                Gdx.graphics.requestRendering()
+                pauseGame()
                 val alert = AlertDialog.Builder(context)
                     .setTitle("Hi Score: $hiScore")
                     .setMessage("$alertMsg\n\nNow see how far you get when pipes actually matter!")
                     .setPositiveButton("I'll... try I guess...") { _, _ ->
                         Snapyr.with(context).trackInAppMessageClick(message.ActionToken)
                         collisionsEnabled = true
-                        // resume game
-                        renderState = RenderState.RUNNING
-                        Gdx.graphics.isContinuousRendering = true
-                        Gdx.graphics.requestRendering()
+                        resumeGame()
                     }
                     .setNegativeButton("No way, I admit I suck") { _, _ ->
                         Snapyr.with(context).trackInAppMessageDismiss(message.ActionToken)
-                        // resume game
-                        renderState = RenderState.RUNNING
-                        Gdx.graphics.isContinuousRendering = true
-                        Gdx.graphics.requestRendering()
+                        resumeGame()
                     }
                     .setCancelable(false)
 
@@ -118,6 +119,43 @@ class FlappyBird(private val context: Activity, private var collisionsEnabled: B
                 }
             }
 
+        }
+    }
+
+    private fun pauseGame() {
+        renderState = RenderState.PAUSED
+        Gdx.graphics.isContinuousRendering = false
+        Gdx.graphics.requestRendering()
+    }
+
+    private fun resumeGame() {
+        renderState = RenderState.RUNNING
+        Gdx.graphics.isContinuousRendering = true
+        Gdx.graphics.requestRendering()
+    }
+
+    private fun showInvalidJsonDialog() {
+        context.runOnUiThread {
+            AlertDialog.Builder(context)
+                .setTitle("Invalid message")
+                .setMessage(
+                    HtmlCompat.fromHtml(
+                        """
+                                Received a custom JSON in-app message from Snapyr, but it did not have 
+                                the expected format. Expecting a message like: 
+                                <br /><br />
+                                <font face="monospace" size="-2">{
+                                <br/>&nbsp;&nbsp;"message":[string],
+                                <br/>&nbsp;&nbsp;"hiScore":[number]
+                                <br />}
+                                </font>
+                            """.trimIndent(), HtmlCompat.FROM_HTML_MODE_LEGACY
+                    )
+                )
+                .setNegativeButton("OK") { _, _ ->
+                    resumeGame()
+                }
+                .show()
         }
     }
 
