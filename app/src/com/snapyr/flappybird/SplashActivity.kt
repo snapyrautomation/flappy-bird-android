@@ -282,7 +282,6 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
     private fun dismissInAppWebview() {
         try {
             if (SnapyrComponent.hasInstance) {
-                var snapyr = SnapyrComponent.instance
                 // Intention for deregistering here was to prevent in-app callbacks from running in this Activity after
                 // user has switched to another Activity (the game). That doesn't seem to be necessary, as the OS suspends
                 // this activity and the callback doesn't run. If the user goes back to this activity, the callbacks start
