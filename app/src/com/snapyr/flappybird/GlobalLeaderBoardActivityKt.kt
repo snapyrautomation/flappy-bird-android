@@ -16,6 +16,6 @@ class GlobalLeaderBoardActivityKt : DebugActivityBase() {
     }
 
     private fun onButtonAClicked(v: View) {
-        safeTrack("birdsPushTestLeaderboard")
+        trackAndLog("birdsPushTestLeaderboard")
     }
 }

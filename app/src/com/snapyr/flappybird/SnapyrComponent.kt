@@ -114,15 +114,6 @@ class SnapyrComponent private constructor(private val context: Context) {
         Snapyr.with(context).reset()
     }
 
-    internal fun onDoIdentify() {
-        Snapyr.with(context).identify(snapyrData.identifyUserId)
-        Snapyr.with(context).identify(Traits().putName(snapyrData.identifyName))
-        Snapyr.with(context).identify(Traits().putEmail(snapyrData.identifyEmail))
-        Snapyr.with(context).identify(Traits().putPhone(snapyrData.identifyPhone))
-        Snapyr.with(context)
-                .identify(snapyrData.identifyUserId, Traits().putValue("games_played", 0), null)
-    }
-
 
     internal fun onDoTrack() {
         Log.d("SnapyrFlappy", "onDoTrack: Track tapped")

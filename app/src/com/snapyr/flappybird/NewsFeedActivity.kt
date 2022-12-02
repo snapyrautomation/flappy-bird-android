@@ -17,6 +17,6 @@ class NewsFeedActivity : DebugActivityBase() {
     }
 
     private fun onButtonAClicked(v: View) {
-        safeTrack("birdsPushTestHomescreen")
+        trackAndLog("birdsPushTestHomescreen")
     }
 }

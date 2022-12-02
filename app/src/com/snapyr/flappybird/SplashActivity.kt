@@ -35,6 +35,7 @@ import android.widget.TextView
 import com.github.kostasdrakonakis.androidnavigator.IntentNavigator
 import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
+import com.snapyr.sdk.Traits
 import com.snapyr.sdk.inapp.InAppActionType
 import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppMessage
@@ -68,7 +69,13 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
         snapyrData.identifyName = identifyName.text.toString()
         snapyrData.identifyPhone = identifyPhone.text.toString()
 
-        SnapyrComponent.instance.onDoIdentify()
+        this.identifyAndLog(
+            snapyrData.identifyUserId, Traits()
+                .putName(snapyrData.identifyName)
+                .putEmail(snapyrData.identifyEmail)
+                .putPhone(snapyrData.identifyPhone)
+                .putValue("games_played", 0)
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -142,6 +149,14 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
 
         pushtest_no_deeplink.setOnClickListener {
             onNoDeeplinkClick()
+        }
+
+        overlayTest.setOnClickListener {
+            trackAndLog("overlayTest")
+        }
+
+        longTextNotif.setOnClickListener {
+            trackAndLog("longTextNotif")
         }
 
         setupWebView()
@@ -300,27 +315,27 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
     }
 
     private fun onBadUrlClick() {
-        safeTrack("birdsPushTestBadUrl")
+        trackAndLog("birdsPushTestBadUrl")
     }
 
     private fun onLeaderboardClick() {
-        safeTrack("birdsPushTestLeaderboard")
+        trackAndLog("birdsPushTestLeaderboard")
     }
 
     private fun onHomescreenClick() {
-        safeTrack("birdsPushTestHomescreen")
+        trackAndLog("birdsPushTestHomescreen")
     }
 
     private fun onNoDeeplinkClick() {
-        safeTrack("birdsPushTestNoDeeplink")
+        trackAndLog("birdsPushTestNoDeeplink")
     }
 
     private fun onPlayerStinksClick(v: View) {
-        safeTrack("userStinks")
+        trackAndLog("userStinks")
     }
 
     private fun onReachedVipClick(v: View) {
-        safeTrack("userRules")
+        trackAndLog("userRules")
     }
 
     override fun onAction(message: InAppMessage) {
