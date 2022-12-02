@@ -7,11 +7,16 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 26
+        minSdkVersion 24
         targetSdkVersion 31
         versionCode 1
         versionName "1.0"
         applicationId "com.snapyr.flappybird"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     buildTypes {
