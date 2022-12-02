@@ -116,6 +116,7 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
             "Snapyr SDK: ${com.snapyr.sdk.core.BuildConfig.VERSION_NAME} ($buildDateStr)"
 
         doIdentifyButton.setOnClickListener {
+            this.hideKeyboard()
             this.doIdentify()
         }
 

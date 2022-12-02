@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.Html
 import android.text.Spanned
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import android.widget.Toast
 import com.snapyr.sdk.Properties
@@ -123,5 +124,12 @@ abstract class DebugActivityBase: Activity() {
         val editableText = logView.editableText
         editableText.insert(0, newEntry)
         logView.text = editableText
+    }
+
+    protected open fun hideKeyboard() {
+        val imm: InputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        if (imm.isAcceptingText && currentFocus != null) { // verify if the soft keyboard is open
+            imm.hideSoftInputFromWindow(currentFocus!!.windowToken, 0)
+        }
     }
 }

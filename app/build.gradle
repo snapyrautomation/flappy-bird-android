@@ -45,7 +45,7 @@ dependencies {
     if (useLocalSnapyrAndroidSDK == 'true') {
         implementation project(':snapyr-root:snapyr')
     } else {
-        implementation 'com.snapyr.sdk.android:snapyr:1.2.2-beta6'
+        implementation 'com.snapyr.sdk.android:snapyr:1.+'
     }
 
     // additional dependencies required by Snapyr
