@@ -1,1 +1,8 @@
 include 'app'
+def useLocalSnapyrAndroidSDK = settings.ext.find('useLocalSnapyrAndroidSDK')
+if (useLocalSnapyrAndroidSDK == 'true') {
+    logger.warn("---------- INCLUDING LOCAL SNAPYR SDK PROJECT ----------")
+    include ':snapyr-root'
+    project(':snapyr-root').projectDir = new File('../snapyr-android-sdk')
+    include ':snapyr-root:snapyr'
+}
