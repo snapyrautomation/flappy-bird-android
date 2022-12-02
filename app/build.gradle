@@ -35,7 +35,13 @@ android {
 }
 
 dependencies {
-    implementation 'com.snapyr.sdk.android:snapyr:1.2.2-beta6'
+    // see gradle.properties to change this config
+    def useLocalSnapyrAndroidSDK = project.findProperty('useLocalSnapyrAndroidSDK') ?: System.getenv('useLocalSnapyrAndroidSDK')
+    if (useLocalSnapyrAndroidSDK == 'true') {
+        implementation project(':snapyr-root:snapyr')
+    } else {
+        implementation 'com.snapyr.sdk.android:snapyr:1.2.2-beta6'
+    }
 
     // additional dependencies required by Snapyr
     implementation('androidx.lifecycle:lifecycle-process:2.2.0')

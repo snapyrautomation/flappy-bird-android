@@ -8,7 +8,9 @@ import android.text.Spanned
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
+import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
+import com.snapyr.sdk.Traits
 import java.text.MessageFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -69,11 +71,24 @@ abstract class DebugActivityBase: Activity() {
         }
     }
 
-    protected fun safeTrack(event: String) {
+    protected fun identifyAndLog(userId: String, traits: Traits? = null) {
         try {
-            Snapyr.with(this).track(event)
+            Snapyr.with(this).identify(userId, traits, null)
+            addLog("Identify sent", userId)
         } catch (e: Exception) {
-            Toast.makeText(this, "Error running track - did you forget to initialize Snapyr?", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error running identify - did you forget to initialize Snapyr?", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    protected fun trackAndLog(event: String, props: Properties? = null) {
+        try {
+            if (Snapyr.with(this).snapyrContext.traits().userId() == null) {
+                throw Exception("Must identify first")
+            }
+            Snapyr.with(this).track(event, props)
+            addLog("Track sent", event)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error running track - did you forget to identify?", Toast.LENGTH_SHORT).show()
         }
     }
 
