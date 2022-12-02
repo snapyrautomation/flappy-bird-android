@@ -40,6 +40,9 @@ import com.snapyr.sdk.inapp.InAppCallback
 import com.snapyr.sdk.inapp.InAppMessage
 import com.snapyr.sdk.inapp.InAppPayloadType
 import kotlinx.android.synthetic.main.activity_splash.*
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.TimeZone
 
 
 class SplashActivity : DebugActivityBase(), InAppCallback {
@@ -90,6 +93,20 @@ class SplashActivity : DebugActivityBase(), InAppCallback {
         identifyPhone.setText(snapyrData.identifyPhone);
 
         current_env.setText("ENV: " + snapyrData.env)
+
+        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        formatter.timeZone = TimeZone.getTimeZone("Etc/UTC");
+
+        var buildDateStr = "Unknown date"
+        try {
+            // hack - we want `com.snapyr.sdk.core.BuildConfig.BUILD_DATE` but it only exists on newer SDK builds. Try getting it by reflection; otherwise label will show "unknown"
+            val buildDate =
+                com.snapyr.sdk.core.BuildConfig::class.java.getDeclaredField("BUILD_DATE").get(null) as Date
+            buildDateStr = formatter.format(buildDate)
+        } catch (e: Exception) {}
+
+        snapyr_version_label.text =
+            "Snapyr SDK: ${com.snapyr.sdk.core.BuildConfig.VERSION_NAME} ($buildDateStr)"
 
         doIdentifyButton.setOnClickListener {
             this.doIdentify()

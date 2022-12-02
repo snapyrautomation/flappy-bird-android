@@ -8,6 +8,7 @@ import android.text.Spanned
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
+import com.snapyr.sdk.Properties
 import com.snapyr.sdk.Snapyr
 import java.text.MessageFormat
 import java.text.SimpleDateFormat
@@ -69,9 +70,9 @@ abstract class DebugActivityBase: Activity() {
         }
     }
 
-    protected fun safeTrack(event: String) {
+    protected fun safeTrack(event: String, props: Properties? = null) {
         try {
-            Snapyr.with(this).track(event)
+            Snapyr.with(this).track(event, props)
         } catch (e: Exception) {
             Toast.makeText(this, "Error running track - did you forget to initialize Snapyr?", Toast.LENGTH_SHORT).show()
         }
